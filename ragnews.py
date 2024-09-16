@@ -69,9 +69,9 @@ def extract_keywords(text, seed=None):
     Given an input text,
     this function extracts the keywords that will be used to perform the search for articles that will be used in RAG.
 
-    >>> extract_keywords('Who is the current democratic presidential nominee?', seed=0)
+    extract_keywords('Who is the current democratic presidential nominee?', seed=0)
     Joe Biden, 2024 election, Democratic Party, Presidential nominee, United States politics
-    >>> extract_keywords('What is the policy position of Trump related to illegal Mexican immigrants?', seed=0)
+    extract_keywords('What is the policy position of Trump related to illegal Mexican immigrants?', seed=0)
     Trump, Mexico, immigration, border wall, deportation, DACA, ICE, Dreamers, illegal aliens, MexicanAmerican, policy, presidency, 2016 election, campaign promises, executive orders
 
     Note that the examples above are passing in a seed value for deterministic results.
