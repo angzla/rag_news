@@ -222,7 +222,6 @@ class ArticleDB:
         '''
         words = [word.strip() for word in query.split(',')]
         match_query = ' OR '.join(f'"{word}"' for word in words)
-        print("match_query:",match_query)
 
         cursor = self.db.cursor()
 
@@ -241,7 +240,6 @@ class ArticleDB:
             cursor.execute(sql, parameters)
             rows = cursor.fetchall()
             for row in rows:
-                print(row)
                 title = row['title']
                 en_summary = row['en_summary']
                 url = row['url']
