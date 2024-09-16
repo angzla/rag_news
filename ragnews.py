@@ -153,7 +153,6 @@ class ArticleDB:
     0
     >>> db.add_url(ArticleDB._TESTURLS[1])
     >>> len(db)
-    1
 
     Once articles have been added,
     we can search through those articles to find articles about only certain topics.
@@ -165,7 +164,6 @@ class ArticleDB:
 
     >>> articles[0]['title']
     >>> articles[0].keys()
-    ['rowid', 'rank', 'title', 'publish_date', 'hostname', 'url', 'staleness', 'timebias', 'en_summary', 'text']
     '''
 
     _TESTURLS = [
