@@ -4,17 +4,17 @@ db = sqlite3.connect('ragnews.db')
 # no standard file extension for sqlite;
 # you can see: .db, .sql, .sqlite, .sqlite3
 
-cursor = db.cursor()
-sql = '''
-SELECT count(*) FROM articles;
-'''
-cursor.execute(sql)
-row = cursor.fetchone()
-print(f"row={row}")
+# cursor = db.cursor()
+# sql = '''
+# SELECT count(*) FROM articles;
+# '''
+# cursor.execute(sql)
+# row = cursor.fetchone()
+# print(f"row={row}")
 
 cursor = db.cursor()
 sql = '''
-SELECT title FROM articles('trump Harris debate')
+SELECT title FROM articles('trump Harris debate') LIMIT 10;
 '''
 cursor.execute(sql)
 rows = cursor.fetchall()

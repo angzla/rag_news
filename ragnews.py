@@ -12,6 +12,7 @@ import datetime
 import logging
 import re
 import sqlite3
+from dotenv import load_dotenv
 
 import groq
 
@@ -22,6 +23,9 @@ import os
 ################################################################################
 # LLM functions
 ################################################################################
+
+# Load environment variables from the .env file
+load_dotenv()
 
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
@@ -66,20 +70,20 @@ def extract_keywords(text, seed=None):
     this function extracts the keywords that will be used to perform the search for articles that will be used in RAG.
 
     >>> extract_keywords('Who is the current democratic presidential nominee?', seed=0)
-    'Joe candidate nominee presidential Democrat election primary TBD voting politics'
+    'Joe Biden, 2024 election, Democratic Party, Presidential nominee, United States politics'
     >>> extract_keywords('What is the policy position of Trump related to illegal Mexican immigrants?', seed=0)
-    'Trump Mexican immigrants policy position illegal border control deportation walls'
+    'Trump immigration policy, MexicoUS border, illegal immigration, deportation, DACA, border wall, immigration reform, Trumps wall, Mexican immigrants, undocumented immigrants, deportation policy, immigration enforcement, ICE, border control'
 
     Note that the examples above are passing in a seed value for deterministic results.
     In production, you probably do not want to specify the seed.
     '''
 
-    # FIXME:
-    # Implement this function.
-    # It's okay if you don't get the exact same keywords as me.
-    # You probably certainly won't because you probably won't come up with the exact same prompt as me.
-    # To make the test cases above pass,
-    # you'll have to modify them to be what the output of your prompt provides.
+    system = 'You are answering a user\'s question with a string of single spaced comma separated important keywords to query in a search engine comma separated single keywords.'
+    keywords = run_llm(system, text, seed=seed)
+    keywords = str(keywords)
+    keywords = re.sub(r'[^\w\s,]', '', keywords)
+    return keywords
+
 
 
 ################################################################################
@@ -122,21 +126,19 @@ def rag(text, db):
     2. evaluating the quality of answers automatically is non-trivial.
 
     '''
+    # Extract keywords from the user's input
+    keywords = extract_keywords(text)
 
-    # FIXME:
-    # Implement this function.
-    # Recall that your RAG system should:
-    # 1. Extract keywords from the text.
-    # 2. Use those keywords to find articles related to the text.
-    # 3. Construct a new user prompt that includes all of the articles and the original text.
-    # 4. Pass the new prompt to the LLM and return the result.
-    #
-    # HINT:
-    # You will also have to write your own system prompt to use with the LLM.
-    # I needed a fairly long system prompt (about 15 lines) in order to get good results.
-    # You can start with a basic system prompt right away just to check if things are working,
-    # but don't spend a lot of time on the system prompt until you're sure everything else is working.
-    # Then, you can iteratively add more commands into the system prompt to correct "bad" behavior you see in your program's output.
+    # Search for relevant articles based on the extracted keywords
+    articles = db.find_articles(keywords)
+
+    # Create a new user prompt that combines the user question and the articles' content
+    new_user_prompt = f"Relevant Articles: {articles}\n\n for my question: {text}"
+
+    # Generate LLM response based on the new prompt
+    system = "You are are a news analyst. Use the following articles to answer the user's question. The articles provide necessary context, so ensure your answer is based on them."
+
+    return run_llm(system, new_user_prompt)
 
 
 class ArticleDB:
@@ -218,20 +220,39 @@ class ArticleDB:
         Lowering the value of the timebias_alpha parameter will result in the time becoming more influential.
         The final ranking is computed by the FTS5 rank * timebias_alpha / (days since article publication + timebias_alpha).
         '''
+        words = [word.strip() for word in query.split(',')]
+        match_query = ' OR '.join(f'"{word}"' for word in words)
+        print("match_query:",match_query)
+
+        cursor = self.db.cursor()
+
+        sql = f'''
+        SELECT title, text, en_summary, publish_date, url, rank * ? / (julianday('now') - julianday(publish_date) + ?) AS final_rank
+        FROM articles
+        WHERE title MATCH ? OR text MATCH ?
+        ORDER BY final_rank DESC
+        LIMIT ?;
+        '''
+
+        parameters = (timebias_alpha, timebias_alpha, match_query, match_query, limit)
+        articles = {}
         
-        # FIXME:
-        # Implement this function.
-        # You do not need to concern yourself with the timebias_alpha parameter.
-        # (Although I encourage you to try!)
-        #
-        # HINT:
-        # The only thing my solution does is pass a SELECT statement to the sqlite3 database.
-        # The SELECT statement will need to use sqlite3's FTS5 syntax for full text search.
-        # If you need to review how to coordinate sqlite3 and python,
-        # there is an example in the __len__ method below.
-        # The details of the SELECT statement will be different
-        # (because the functions collect different information)
-        # but the outline of the python code is the same.
+        try:
+            cursor.execute(sql, parameters)
+            rows = cursor.fetchall()
+            for row in rows:
+                print(row)
+                title = row['title']
+                en_summary = row['en_summary']
+                url = row['url']
+                text = row['text']
+                articles[title] = {'en_summary': en_summary, 'url': url, 'text': text}
+        except Exception as e:
+            print(f"An error occurred while querying the database: {e}")
+        finally:
+            cursor.close()  # Ensure cursor is closed even if an error occurs
+            print("articles after function:", articles)
+        return articles
 
     @_catch_errors
     def add_url(self, url, recursive_depth=0, allow_dupes=False):
@@ -344,7 +365,6 @@ class ArticleDB:
         cursor.execute(sql)
         row = cursor.fetchone()
         return row[0]
-
 
 if __name__ == '__main__':
     import argparse
