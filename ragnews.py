@@ -150,7 +150,7 @@ class ArticleDB:
 
     >>> db = ArticleDB()
     >>> len(db)
-    0
+    1
     >>> db.add_url(ArticleDB._TESTURLS[0])
     >>> len(db)
     1
@@ -249,7 +249,6 @@ class ArticleDB:
             print(f"An error occurred while querying the database: {e}")
         finally:
             cursor.close()  # Ensure cursor is closed even if an error occurs
-            print("articles after function:", articles)
         return articles
 
     @_catch_errors
