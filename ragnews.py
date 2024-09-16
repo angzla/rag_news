@@ -151,7 +151,7 @@ class ArticleDB:
     >>> db = ArticleDB()
     >>> len(db)
     0
-    >>> db.add_url(ArticleDB._TESTURLS[0])
+    >>> db.add_url(ArticleDB._TESTURLS[1])
     >>> len(db)
     1
 
