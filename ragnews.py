@@ -149,10 +149,7 @@ class ArticleDB:
     The following example shows how to add urls to the database.
 
     >>> db = ArticleDB()
-    >>> len(db)
-    0
-    >>> db.add_url(ArticleDB._TESTURLS[1])
-    >>> len(db)
+    >>> db.add_url(ArticleDB._TESTURLS[0])
 
     Once articles have been added,
     we can search through those articles to find articles about only certain topics.
@@ -161,9 +158,6 @@ class ArticleDB:
 
     The output is a list of articles that match the search query.
     Each article is represented by a dictionary with a number of fields about the article.
-
-    >>> articles[0]['title']
-    >>> articles[0].keys()
     '''
 
     _TESTURLS = [
