@@ -27,4 +27,4 @@ jobs:
           sudo apt-get install -y poppler-utils  # Install pdftotext
       - name: Run doctests
         run: |
-          python3 ragnews.py --query "Who is the current democratic presidential nominee"
+          python3 ragnews.py
